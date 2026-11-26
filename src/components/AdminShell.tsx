@@ -22,7 +22,8 @@ import {
   UserCog,
 } from "lucide-react";
 import LanguageSwitcher from "./LanguageSwitcher";
-import { Logo } from "./ui";
+import { useAdminData } from "./AdminData";
+import { ConfirmModal, Logo } from "./ui";
 
 const nav = [
   { href: "/dashboard", key: "dashboard", icon: LayoutDashboard },
@@ -44,9 +45,16 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [logout, setLogout] = useState(false);
+  const { profile } = useAdminData();
+  const adminName = profile.name ?? "Roberts Junior";
 
-  const sidebar = (
-    <aside className="flex h-full w-[260px] flex-col border-e border-line bg-white p-6">
+  const renderSidebar = (mobile: boolean) => (
+    <aside
+      className={`flex h-full flex-col border-e border-line bg-white ${
+        mobile ? "w-[360px] max-w-[96vw] p-3 min-[400px]:p-6" : "w-[260px] p-6"
+      }`}
+    >
       <Link href="/dashboard" className="mb-6 flex h-[72px] items-center justify-center rounded-[16px] bg-panel" dir="ltr">
         <Logo />
       </Link>
@@ -69,7 +77,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         })}
       </nav>
       <button
-        onClick={() => router.push("/login")}
+        onClick={() => setLogout(true)}
         className="mt-4 flex h-12 items-center justify-center gap-3 rounded-[10px] border border-bad bg-bad/5 font-medium text-bad"
       >
         <LogOut size={18} className="rtl:rotate-180" />
@@ -80,23 +88,23 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
-      <div className="hidden lg:block">{sidebar}</div>
+      <div className="hidden lg:block">{renderSidebar(false)}</div>
       {open && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-          <div className="absolute inset-y-0 start-0">{sidebar}</div>
+          <div className="absolute inset-y-0 start-0">{renderSidebar(true)}</div>
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-[72px] shrink-0 items-center justify-between border-b border-line px-6">
+        <header className="flex h-[72px] shrink-0 items-center justify-between gap-2 border-b border-line px-3 sm:px-6">
           <button
             onClick={() => setOpen(true)}
             aria-label={t("nav.openMenu")}
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-navy text-white lg:pointer-events-none"
+            className="flex h-11 w-14 shrink-0 items-center justify-center rounded-lg bg-navy text-white lg:pointer-events-none"
           >
-            <PanelLeft size={18} className="rtl:rotate-180" />
+            <PanelLeft size={22} className="rtl:rotate-180" />
           </button>
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <LanguageSwitcher />
             <Link
               href="/notifications"
@@ -108,10 +116,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </Link>
             <Link href="/profile" className="flex items-center gap-2">
               <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-sky text-[14px] font-bold italic text-navy">
-                R
+                {adminName[0]}
               </span>
               <span className="hidden leading-tight sm:block">
-                <span className="block text-[12px] font-medium text-ink">Roberts Junior</span>
+                <span className="block text-[12px] font-medium text-ink">{adminName}</span>
                 <span className="rounded-full bg-ok/15 px-2 text-[10px] text-ok">● {t("common.admin")}</span>
               </span>
             </Link>
@@ -119,6 +127,16 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </header>
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
       </div>
+      <ConfirmModal
+        open={logout}
+        title={t("acctX.logoutTitle")}
+        message={t("acctX.logoutMsg")}
+        onCancel={() => setLogout(false)}
+        onConfirm={() => {
+          setLogout(false);
+          router.push("/login");
+        }}
+      />
     </div>
   );
 }

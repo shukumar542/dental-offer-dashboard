@@ -6,15 +6,23 @@ import { CircleDollarSign, TrendingUp } from "lucide-react";
 import { FilterSelect, PageTitle, TableCard, usePaged } from "@/components/ui";
 import { earnings } from "@/lib/data";
 
-type Range = "today" | "week" | "month";
-const totals: Record<Range, string> = { today: "3657.50", week: "18,240.00", month: "74,915.25" };
+type Range = "today" | "last24" | "week" | "fortnight" | "month" | "year";
+const RANGES: Range[] = ["today", "last24", "week", "fortnight", "month", "year"];
+const totals: Record<Range, string> = {
+  today: "3,657.50",
+  last24: "4,012.00",
+  week: "18,240.00",
+  fortnight: "33,870.25",
+  month: "74,915.25",
+  year: "812,430.00",
+};
 
 export default function EarningsPage() {
   const { t } = useTranslation();
   const [range, setRange] = useState<Range>("today");
   const { slice, page, pages, setPage } = usePaged(earnings);
   const offset = (page - 1) * 9;
-  const options = (["today", "week", "month"] as Range[]).map((r) => ({ value: r, label: t(`common.${r}`) }));
+  const options = RANGES.map((r) => ({ value: r, label: t(`ranges.${r}`) }));
 
   return (
     <div className="space-y-4">
@@ -26,7 +34,7 @@ export default function EarningsPage() {
             value={range}
             onChange={(v) => v && setRange(v as Range)}
             options={options}
-            placeholder={t("common.today")}
+            required
             className="[&_select]:min-w-[150px]"
           />
         </header>
@@ -36,7 +44,7 @@ export default function EarningsPage() {
               <CircleDollarSign size={20} />
             </span>
             <div>
-              <p className="text-[14px] text-muted">{t("earnings.showing", { range: t(`common.${range}`) })}</p>
+              <p className="text-[14px] text-muted">{t("earnings.showing", { range: t(`ranges.${range}`) })}</p>
               <p className="text-[18px] font-semibold" dir="ltr">
                 ₪ {totals[range]}
               </p>

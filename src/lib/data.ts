@@ -1,6 +1,19 @@
 export type UserStatus = "Active" | "Blocked";
+export type KycStatus = "Pending" | "Verified" | "Rejected";
+export type HelpStatus = "To Do" | "Resolved";
+export type PlanKey = "trial" | "monthly" | "six" | "yearly";
+export type Audience = "Customer" | "Clinic";
 
-export const users = (
+export type User = {
+  id: number;
+  name: string;
+  phone: string;
+  joined: string;
+  status: UserStatus;
+  email: string;
+};
+
+export const users: User[] = (
   [
     ["Michael Smith", "+9750-555-0832", "Jul 16, 2025", "Blocked", "sakib.cse@gmail.com"],
     ["Linda Perez", "+9746-555-0678", "Jul 14, 2025", "Active", "sajid.bd@gmail.com"],
@@ -23,53 +36,85 @@ export const users = (
   email,
 }));
 
-export const clinics = (
-  [
-    ["BlueSky Dental Clinic", "+9750-555-0832", "3 / 621 Juvenal Ridge, Tel Aviv", "Jul 16, 2025", "Blocked"],
-    ["Crown Dental Care", "+9746-555-0678", "0 / 77 Purdy Crescent, Haifa", "Jul 14, 2025", "Active"],
-    ["Prime Dental Studio", "+9714-555-0985", "Suite 756 031 Ines River, Jerusalem", "Jul 20, 2025", "Active"],
-    ["EverSmile Dentistry", "+9706-555-0734", "74C Aaliyah River, Haifa", "Jul 20, 2025", "Active"],
-    ["Prestige Dental Care", "+1720-555-0641", "Level 5 05 Favian Park, Eilat", "Jul 12, 2025", "Active"],
-    ["PureSmile Dental", "+9713-555-0890", "09 Arnulfo Crossing, Netanya", "Jul 10, 2025", "Active"],
-    ["Oakwood Dental", "+9706-555-0734", "208 Olson Boulevard, Haifa", "Jul 19, 2025", "Active"],
-    ["Urban Smile Clinic", "+9714-555-0985", "67B Gregorio Grove, Tel Aviv", "Jul 18, 2025", "Active"],
-    ["Ivory Dental Center", "+9715-555-0773", "3 Bauch Nook, Howe Street", "Jul 18, 2025", "Blocked"],
-  ] as const
-).map(([name, phone, address, joined, status], i) => ({
-  id: i + 1,
-  name,
-  phone,
-  address,
-  joined,
-  status: status as UserStatus,
-}));
+export type Subscription = {
+  plan: PlanKey;
+  expires: string;
+  trialStart?: string;
+  trialEnd?: string;
+};
 
-export type KycStatus = "Pending" | "Verified" | "Rejected";
+export type Clinic = {
+  id: number;
+  name: string;
+  phone: string;
+  address: string;
+  joined: string;
+  status: UserStatus;
+  services: string[];
+  dentists: string[];
+  subscription: Subscription | null;
+  rating: number;
+  about: string;
+  regType: string;
+  regNumber: string;
+  submitted: string;
+  verification: KycStatus;
+  source: "Admin Added" | "Self-Registered";
+  docs: string[];
+};
 
-export const kyc = (
-  [
-    ["Oakwood Dental Clinic", "Dental Clinic License", "Jul 16, 2025", "Pending"],
-    ["PureSmile Dental Care", "Dentist Professional License", "Jul 14, 2025", "Pending"],
-    ["White Pearl Dentistry", "Other / Not Listed", "Jul 20, 2025", "Pending"],
-    ["Pearl Dental Studio", "Dental Clinic License", "Jul 20, 2025", "Verified"],
-    ["Diamond Dental Care", "Dentist Professional License", "Jul 12, 2025", "Verified"],
-    ["BlueSky Dental Clinic", "Dental Clinic License", "Jul 10, 2025", "Verified"],
-    ["Elite Smile Studio", "Dentist Professional License", "Jul 19, 2025", "Rejected"],
-    ["Urban Smile Clinic", "Dental Clinic License", "Jul 18, 2025", "Rejected"],
-    ["Nova Dental Clinic", "Dentist Professional License", "Jul 18, 2025", "Rejected"],
-  ] as const
-).map(([clinic, type, requested, status], i) => ({
-  id: i + 1,
-  clinic,
-  type,
-  requested,
-  status: status as KycStatus,
-  regNumber: `REG-${100230 + i * 17}`,
-  phone: "+9750-555-0832",
-  email: "clinic@example.com",
-}));
+const DENTISTS = ["Dr. Sarah Cohen", "Dr. David Levi", "Dr. Maya Katz", "Dr. Omar Haddad"];
 
-export const earnings = (
+// [name, phone, address, joined, status, verification, regType, submitted]
+const clinicRows = [
+  ["BlueSky Dental Clinic", "+9750-555-0832", "3 / 621 Juvenal Ridge, Tel Aviv", "Jul 16, 2025", "Blocked", "Verified", "Dental Clinic License", "Jul 10, 2025"],
+  ["Crown Dental Care", "+9746-555-0678", "0 / 77 Purdy Crescent, Haifa", "Jul 14, 2025", "Active", "Pending", "Dentist Professional License", "Jul 14, 2025"],
+  ["Prime Dental Studio", "+9714-555-0985", "Suite 756 031 Ines River, Jerusalem", "Jul 20, 2025", "Active", "Verified", "Dental Clinic License", "Jul 20, 2025"],
+  ["EverSmile Dentistry", "+9706-555-0734", "74C Aaliyah River, Haifa", "Jul 20, 2025", "Active", "Verified", "Dental Clinic License", "Jul 20, 2025"],
+  ["Prestige Dental Care", "+1720-555-0641", "Level 5 05 Favian Park, Eilat", "Jul 12, 2025", "Active", "Verified", "Dentist Professional License", "Jul 12, 2025"],
+  ["PureSmile Dental Care", "+9713-555-0890", "09 Arnulfo Crossing, Netanya", "Jul 10, 2025", "Active", "Pending", "Dentist Professional License", "Jul 14, 2025"],
+  ["Oakwood Dental Clinic", "+9706-555-0734", "208 Olson Boulevard, Haifa", "Jul 19, 2025", "Active", "Pending", "Dental Clinic License", "Jul 16, 2025"],
+  ["Urban Smile Clinic", "+9714-555-0985", "67B Gregorio Grove, Tel Aviv", "Jul 18, 2025", "Active", "Rejected", "Dental Clinic License", "Jul 18, 2025"],
+  ["Ivory Dental Center", "+9715-555-0773", "3 Bauch Nook, Howe Street", "Jul 18, 2025", "Blocked", "Verified", "Dental Clinic License", "Jul 05, 2025"],
+  ["White Pearl Dentistry", "+9711-555-0140", "12 Herzl Street, Ashdod", "Jul 20, 2025", "Active", "Pending", "Other / Not Listed", "Jul 20, 2025"],
+  ["Pearl Dental Studio", "+9711-555-0188", "5 Ben Gurion Ave, Haifa", "Jul 20, 2025", "Active", "Verified", "Dental Clinic License", "Jul 20, 2025"],
+  ["Diamond Dental Care", "+9711-555-0192", "44 Dizengoff Street, Tel Aviv", "Jul 12, 2025", "Active", "Verified", "Dentist Professional License", "Jul 12, 2025"],
+  ["Elite Smile Studio", "+9711-555-0201", "8 Rothschild Blvd, Tel Aviv", "Jul 19, 2025", "Active", "Rejected", "Dentist Professional License", "Jul 19, 2025"],
+  ["Nova Dental Clinic", "+9711-555-0233", "21 Jaffa Road, Jerusalem", "Jul 18, 2025", "Active", "Rejected", "Dentist Professional License", "Jul 18, 2025"],
+] as const;
+
+export const clinics: Clinic[] = clinicRows.map(
+  ([name, phone, address, joined, status, verification, regType, submitted], i) => ({
+    id: i + 1,
+    name,
+    phone,
+    address,
+    joined,
+    status: status as UserStatus,
+    services: ["Implants", "Crowns", "Veneers"],
+    dentists: DENTISTS.slice(0, (i % 3) + 2),
+    subscription: i % 4 === 3 ? null : { plan: (["yearly", "monthly", "six", "trial"] as PlanKey[])[i % 4], expires: "01 Nov 2027" },
+    rating: 5,
+    about: "Professional dental care with personalized treatment plans.",
+    regType,
+    regNumber: `CLN-2026-${String(842 + i * 7).padStart(5, "0")}`,
+    submitted,
+    verification: verification as KycStatus,
+    source: i % 2 === 0 ? "Self-Registered" : "Admin Added",
+    docs: ["Registration.pdf", "License.pdf"],
+  }),
+);
+
+export type Earning = {
+  id: number;
+  clinic: string;
+  plan: string;
+  txn: string;
+  date: string;
+  amount: string;
+};
+
+export const earnings: Earning[] = (
   [
     ["Silverline Dental Clinic", "Monthly", "TXN001234577", "Oct 5 • 2:30 PM", "11.99"],
     ["Crown Dental Care", "6 Months", "TXN001234573", "Nov 12 • 9:15 AM", "59.99"],
@@ -82,9 +127,21 @@ export const earnings = (
   ] as const
 ).map(([clinic, plan, txn, date, amount], i) => ({ id: i + 1, clinic, plan, txn, date, amount }));
 
-export type HelpStatus = "To Do" | "Resolved";
+export type HelpItem = {
+  id: number;
+  name: string;
+  role: "Clinic" | "User";
+  reason: string;
+  submitted: string;
+  status: HelpStatus;
+  message: string;
+  phone: string;
+  address: string;
+  joined: string;
+  accountStatus: UserStatus;
+};
 
-export const help = (
+export const help: HelpItem[] = (
   [
     ["Alex Müller", "Clinic", "Account & Login", "Sep 12 • 11:00 AM", "To Do"],
     ["Leon Schäfer", "User", "Clinic Verification", "Aug 31 • 9:00 AM", "To Do"],
@@ -103,11 +160,18 @@ export const help = (
   reason,
   submitted,
   status: status as HelpStatus,
+  phone: "+9746-555-0678",
+  address: "0 / 77 Purdy Crescent, West Arthur",
+  joined: "Jul 14, 2025",
+  accountStatus: "Active" as UserStatus,
   message:
-    "Hello, I am facing an issue related to this topic. Could you please look into it and get back to me as soon as possible? Thank you.",
+    role === "Clinic"
+      ? "I am reaching out regarding my clinic account registration and verification. My clinic verification is currently pending or has been unsuccessful, and I am unable to start offering services on DentalOffers. I would appreciate an update on my verification status and guidance on what needs to be fixed. Thank you for your time and assistance."
+      : "I am reaching out regarding my patient account. I am experiencing an issue with my account or accessing DentalOffers and would appreciate your assistance in resolving it. Please review my request and let me know if any additional information is needed. Thank you for your time and support.",
 }));
 
-export const categories = [
+export type Category = { id: number; name: string };
+export const categories: Category[] = [
   "Clear Aligners",
   "Dentures",
   "Dental Cleaning",
@@ -117,17 +181,18 @@ export const categories = [
   "Dental Veneers",
   "Orthodontics",
   "All-on-4 Dental Implants",
-];
+].map((name, i) => ({ id: i + 1, name }));
 
-export const faqs = (
+export type Faq = { id: number; q: string; a: string; audience: Audience };
+export const faqs: Faq[] = (
   [
-    ["What steps should I follow to schedule a service!", "To schedule a service, pick the service you need, select a Clinic, choose a date and time that works for you, and finalize your appointment."],
-    ["What is the process for booking a service!", "Start by selecting the service you want, then choose a Clinic, pick an available date and time, and confirm your appointment."],
-    ["What do I need to do to book a service!", "First, choose the service you wish to book, then select a Clinic, find an available date and time, and confirm your booking."],
-    ["How can I schedule a service!", "To book a service, select the service you need, choose a Clinic, pick a suitable date and time, and confirm your booking."],
-    ["What are the steps to book a service!", "To book a service, first choose the service you want, then select a Clinic, pick an available date and time, and confirm your appointment."],
+    ["What steps should I follow to schedule a service!", "To schedule a service, pick the service you need, select a Clinic, choose a date and time that works for you, and finalize your appointment.", "Clinic"],
+    ["What is the process for booking a service!", "Start by selecting the service you want, then choose a Clinic, pick an available date and time, and confirm your appointment.", "Customer"],
+    ["What do I need to do to book a service!", "First, choose the service you wish to book, then select a Clinic, find an available date and time, and confirm your booking.", "Customer"],
+    ["How can I schedule a service!", "To book a service, select the service you need, choose a Clinic, pick a suitable date and time, and confirm your booking.", "Clinic"],
+    ["What are the steps to book a service!", "To book a service, first choose the service you want, then select a Clinic, pick an available date and time, and confirm your appointment.", "Customer"],
   ] as const
-).map(([q, a], i) => ({ id: i + 1, q, a }));
+).map(([q, a, audience], i) => ({ id: i + 1, q, a, audience: audience as Audience }));
 
 export const notifications = [
   { title: "New User Registered", body: "A new User account has been created successfully.", time: "04:45 pm", unread: true },
@@ -137,28 +202,14 @@ export const notifications = [
 ];
 
 export const treatmentServices = [
-  "Dental Implants",
-  "Dental Crowns",
+  "Implants",
+  "Crowns",
   "Veneers",
+  "Dental implants",
+  "Tooth crowns",
   "Orthodontics",
   "Root Canal Treatment",
   "Teeth Whitening Services",
   "General Dentistry Care",
-  "Dental Check-Ups",
+  "Dental Check-ups",
 ];
-
-export const termsHtml = `<h4>Terms &amp; Conditions</h4><p>Last updated: 27 October 2026</p>
-<h4>01. About DentalOffers</h4><p>DentalOffers connects patients with dental clinics, allowing patients to submit treatment requests, receive quotations, compare offers, and communicate with clinics.</p>
-<h4>02. Your Account</h4><p>You must provide accurate information and keep your account secure. You are responsible for activity carried out through your account.</p>
-<h4>03. Treatment Requests &amp; Offers</h4><p>You can submit treatment requests and receive quotations from clinics. You are responsible for reviewing offers and discussing treatment details directly with your chosen clinic. Selecting an offer does not automatically confirm an appointment or treatment.</p>
-<h4>04. Dental Treatment &amp; Payments</h4><p>DentalOffers is a connection platform, not a dental care provider. Clinics are responsible for their treatment services, prices, and clinical decisions. Patients pay clinics directly for treatment unless otherwise stated.</p>
-<h4>05. Acceptable Use</h4><p>You must not misuse the platform, submit false information, harass other users, or engage in unlawful activities.</p>
-<h4>06. Account Suspension &amp; Deletion</h4><p>You may request account deletion through the app where available. We may restrict accounts that violate these terms or pose a security risk. Certain records may be retained where legally required.</p>
-<h4>07. Changes &amp; Contact</h4><p>We may update these terms when necessary. For questions, contact us at [Support Email].<br/>By using DentalOffers, you agree to these Terms &amp; Conditions.</p>`;
-
-export const privacyHtml = `<h4>Privacy Policy</h4><p>Last updated: 27 October 2026</p>
-<h4>01. Information We Collect</h4><p>We collect information you provide such as name, phone number, email, treatment requests and clinic details, plus basic device and usage data.</p>
-<h4>02. How We Use Information</h4><p>We use your information to operate the platform, connect patients with clinics, verify clinics, provide support and improve our services.</p>
-<h4>03. Sharing</h4><p>Your treatment request details are shared with clinics so they can send offers. We do not sell your personal data.</p>
-<h4>04. Security &amp; Retention</h4><p>We use reasonable safeguards to protect your data and retain records only as long as necessary or legally required.</p>
-<h4>05. Contact</h4><p>For privacy questions, contact support@dentaloffers.com.</p>`;

@@ -14,37 +14,36 @@ const stats = [
   { key: "pendingVerification", value: 16, icon: ClipboardCheck },
 ];
 
-type Range = "today" | "week" | "month";
-const vsKey: Record<Range, string> = { today: "yesterday", week: "lastWeek", month: "lastMonth" };
-
-const activity: Record<
-  Range,
-  { key: string; value: string; icon: typeof User; delta: number; up: boolean }[]
-> = {
-  today: [
-    { key: "newUsers", value: "12", icon: User, delta: 5, up: true },
-    { key: "newClinics", value: "08", icon: Building2, delta: 5, up: false },
-    { key: "newHelp", value: "02", icon: Headset, delta: 1, up: true },
-    { key: "newVerifications", value: "02", icon: ClipboardCheck, delta: 1, up: true },
-  ],
-  week: [
-    { key: "newUsers", value: "64", icon: User, delta: 8, up: true },
-    { key: "newClinics", value: "31", icon: Building2, delta: 3, up: true },
-    { key: "newHelp", value: "14", icon: Headset, delta: 2, up: false },
-    { key: "newVerifications", value: "11", icon: ClipboardCheck, delta: 4, up: true },
-  ],
-  month: [
-    { key: "newUsers", value: "240", icon: User, delta: 12, up: true },
-    { key: "newClinics", value: "96", icon: Building2, delta: 6, up: true },
-    { key: "newHelp", value: "52", icon: Headset, delta: 9, up: false },
-    { key: "newVerifications", value: "40", icon: ClipboardCheck, delta: 7, up: true },
-  ],
+type Range = "today" | "last24" | "week" | "fortnight" | "month" | "year";
+const RANGES: Range[] = ["today", "last24", "week", "fortnight", "month", "year"];
+const vsKey: Record<Range, string> = {
+  today: "vsToday",
+  last24: "vsLast24",
+  week: "vsWeek",
+  fortnight: "vsFortnight",
+  month: "vsMonth",
+  year: "vsYear",
 };
+const scale: Record<Range, number> = { today: 1, last24: 1.1, week: 5, fortnight: 9, month: 20, year: 240 };
+
+const base = [
+  { key: "newUsers", value: 12, icon: User, delta: 5, up: true },
+  { key: "newClinics", value: 8, icon: Building2, delta: 5, up: false },
+  { key: "newHelp", value: 2, icon: Headset, delta: 1, up: true },
+  { key: "newVerifications", value: 2, icon: ClipboardCheck, delta: 1, up: true },
+];
+const activity = (r: Range) =>
+  base.map((b, i) => ({
+    ...b,
+    value: String(Math.max(1, Math.round(b.value * scale[r]))).padStart(2, "0"),
+    delta: b.delta + (r === "today" ? 0 : i + 1),
+    up: r === "today" || r === "last24" ? b.up : (i + RANGES.indexOf(r)) % 3 !== 0,
+  }));
 
 export default function DashboardPage() {
   const { t } = useTranslation();
   const [range, setRange] = useState<Range>("today");
-  const rangeOptions = (["today", "week", "month"] as Range[]).map((r) => ({ value: r, label: t(`common.${r}`) }));
+  const rangeOptions = RANGES.map((r) => ({ value: r, label: t(`ranges.${r}`) }));
 
   return (
     <div className="space-y-6">
@@ -69,18 +68,18 @@ export default function DashboardPage() {
       <section className="rounded-[20px] border border-line">
         <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
           <h2 className="text-[20px] font-semibold">
-            {t("dashboard.activityFor", { range: t(`common.${range}`) })}
+            {t("dashboard.activityFor", { range: t(`ranges.${range}`) })}
           </h2>
           <FilterSelect
             value={range}
             onChange={(v) => v && setRange(v as Range)}
             options={rangeOptions}
-            placeholder={t("common.today")}
+            required
             className="[&_select]:min-w-[150px]"
           />
         </header>
         <ul className="px-4 py-2">
-          {activity[range].map(({ key, value, icon: Icon, delta, up }) => (
+          {activity(range).map(({ key, value, icon: Icon, delta, up }) => (
             <li key={key} className="flex items-center justify-between py-3">
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-navy text-white">
@@ -97,7 +96,7 @@ export default function DashboardPage() {
                   <span dir="ltr">{delta}%</span>
                 </span>
                 <span className="hidden text-muted sm:inline">
-                  {t(up ? "dashboard.higher" : "dashboard.lower", { vs: t(`dashboard.${vsKey[range]}`) })}
+                  {t(up ? "dashboard.higher" : "dashboard.lower", { vs: t(`ranges.${vsKey[range]}`) })}
                 </span>
               </div>
             </li>

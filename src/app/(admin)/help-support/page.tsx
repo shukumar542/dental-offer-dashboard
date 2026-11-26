@@ -4,19 +4,24 @@ import Link from "next/link";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Eye } from "lucide-react";
+import { useAdminData } from "@/components/AdminData";
 import { Avatar, FilterSelect, PageTitle, StatusBadge, TableCard, usePaged } from "@/components/ui";
-import { help } from "@/lib/data";
 
 export default function HelpSupportPage() {
   const { t } = useTranslation();
+  const { help } = useAdminData();
   const [status, setStatus] = useState("");
-  const filtered = help.filter((r) => !status || r.status === status);
+  const filtered = help.filter((r) => !status || status === "all" || r.status === status);
   const { slice, page, pages, setPage } = usePaged(filtered);
 
   return (
     <div>
       <PageTitle title={t("help.title")}>
-        <FilterSelect value={status} onChange={(v) => (setStatus(v), setPage(1))} options={["To Do", "Resolved"]} />
+        <FilterSelect
+          value={status}
+          onChange={(v) => (setStatus(v), setPage(1))}
+          options={[{ value: "all", label: t("helpX.all") }, "To Do", "Resolved"]}
+        />
       </PageTitle>
       <TableCard
         empty={filtered.length === 0}

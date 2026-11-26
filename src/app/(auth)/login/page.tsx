@@ -19,7 +19,8 @@ export default function LoginPage() {
         e.preventDefault();
         const f = new FormData(e.currentTarget);
         if (!f.get("email") || !f.get("password")) return setError(true);
-        router.push("/dashboard");
+        // Demo: an email starting with "blocked" simulates a blocked/invalid admin.
+        router.push(String(f.get("email")).toLowerCase().startsWith("blocked") ? "/access-denied" : "/dashboard");
       }}
       className="space-y-4"
     >

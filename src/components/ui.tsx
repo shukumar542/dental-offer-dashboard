@@ -126,7 +126,9 @@ export function FilterSelect({
   options,
   placeholder,
   className = "",
+  required = false,
 }: {
+  required?: boolean;
   value: string;
   onChange: (v: string) => void;
   options: (string | { value: string; label: string })[];
@@ -141,7 +143,7 @@ export function FilterSelect({
         onChange={(e) => onChange(e.target.value)}
         className="h-10 w-full min-w-[200px] appearance-none rounded-[10px] bg-panel px-4 pe-10 text-[14px] text-muted outline-none"
       >
-        <option value="">{placeholder ?? t("common.filterByStatus")}</option>
+        {!required && <option value="">{placeholder ?? t("common.filterByStatus")}</option>}
         {options.map((o) => {
           const v = typeof o === "string" ? o : o.value;
           const label = typeof o === "string" ? t(`status.${o}`, { defaultValue: o }) : o.label;
@@ -267,6 +269,7 @@ export function ConfirmModal({
   confirmLabel,
   onCancel,
   onConfirm,
+  children,
 }: {
   open: boolean;
   title: string;
@@ -274,6 +277,7 @@ export function ConfirmModal({
   confirmLabel?: string;
   onCancel: () => void;
   onConfirm: () => void;
+  children?: React.ReactNode;
 }) {
   const { t } = useTranslation();
   if (!open) return null;
@@ -283,8 +287,9 @@ export function ConfirmModal({
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#f59e0b] text-white">
           <TriangleAlert size={28} />
         </div>
-        <h3 className="text-[22px] font-bold text-ink">{title}</h3>
-        <p className="mx-auto mt-3 max-w-[400px] text-[14px] text-muted">{message}</p>
+        <h3 className="text-[24px] font-bold text-ink">{title}</h3>
+        <p className="mx-auto mt-3 max-w-[420px] text-[15px] text-muted">{message}</p>
+        {children}
         <div className="mt-6 grid grid-cols-2 gap-3">
           <button onClick={onCancel} className="h-12 rounded-[10px] bg-panel font-medium text-muted">
             {t("common.cancel")}

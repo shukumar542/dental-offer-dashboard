@@ -1,39 +1,29 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { ConfirmModal, IconBtn, Modal, PageTitle, TableCard, usePaged } from "@/components/ui";
-import { categories } from "@/lib/data";
+import { useAdminData } from "@/components/AdminData";
+import { ConfirmModal, IconBtn, PageTitle, TableCard, usePaged } from "@/components/ui";
 
 export default function TreatmentCategoryPage() {
   const { t } = useTranslation();
-  const [rows, setRows] = useState(categories);
-  const [edit, setEdit] = useState<{ index: number | null; value: string } | null>(null);
+  const { categories, deleteCategory } = useAdminData();
   const [del, setDel] = useState<number | null>(null);
-  const { slice, page, pages, setPage } = usePaged(rows);
+  const { slice, page, pages, setPage } = usePaged(categories);
   const offset = (page - 1) * 9;
-
-  const save = () => {
-    if (!edit || !edit.value.trim()) return;
-    if (edit.index === null) {
-      setRows([...rows, edit.value.trim()]);
-      setPage(Math.ceil((rows.length + 1) / 9)); // jump to the page showing the new item
-    } else {
-      setRows(rows.map((r, i) => (i === edit.index ? edit.value.trim() : r)));
-    }
-    setEdit(null);
-  };
+  const target = categories.find((c) => c.id === del);
 
   return (
     <div>
       <PageTitle title={t("category.title")}>
-        <button
-          onClick={() => setEdit({ index: null, value: "" })}
+        <Link
+          href="/treatment-category/new"
           className="flex h-11 items-center gap-2 rounded-[10px] bg-navy px-5 text-[15px] font-medium text-white"
         >
           <Plus size={16} /> {t("common.addNew")}
-        </button>
+        </Link>
       </PageTitle>
       <TableCard
         paging={{ page, pages, onPage: setPage }}
@@ -45,16 +35,21 @@ export default function TreatmentCategoryPage() {
           </>
         }
       >
-        {slice.map((name, i) => (
-          <tr key={name + i}>
+        {slice.map((c, i) => (
+          <tr key={c.id}>
             <td className="td font-medium text-ink">{String(offset + i + 1).padStart(2, "0")}</td>
-            <td className="td text-[15px]">{name}</td>
+            <td className="td text-[15px]">{c.name}</td>
             <td className="td">
               <div className="flex justify-end gap-2">
-                <IconBtn label={t("common.edit")} tone="sky" onClick={() => setEdit({ index: offset + i, value: name })}>
+                <Link
+                  href={`/treatment-category/${c.id}/edit`}
+                  aria-label={t("common.edit")}
+                  title={t("common.edit")}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky text-navy hover:opacity-80"
+                >
                   <Pencil size={15} />
-                </IconBtn>
-                <IconBtn label={t("common.delete")} tone="red" onClick={() => setDel(offset + i)}>
+                </Link>
+                <IconBtn label={t("common.delete")} tone="red" onClick={() => setDel(c.id)}>
                   <Trash2 size={15} />
                 </IconBtn>
               </div>
@@ -63,36 +58,13 @@ export default function TreatmentCategoryPage() {
         ))}
       </TableCard>
 
-      <Modal
-        open={!!edit}
-        title={edit?.index === null ? t("category.addTitle") : t("category.editTitle")}
-        onClose={() => setEdit(null)}
-      >
-        <input
-          autoFocus
-          value={edit?.value ?? ""}
-          onChange={(e) => edit && setEdit({ ...edit, value: e.target.value })}
-          onKeyDown={(e) => e.key === "Enter" && save()}
-          placeholder={t("category.ph")}
-          className="input"
-        />
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <button onClick={() => setEdit(null)} className="h-12 rounded-[10px] bg-panel font-medium text-muted">
-            {t("common.cancel")}
-          </button>
-          <button onClick={save} className="h-12 rounded-[10px] bg-navy font-medium text-white">
-            {t("common.save")}
-          </button>
-        </div>
-      </Modal>
       <ConfirmModal
-        open={del !== null}
-        title={t("category.deleteTitle")}
-        message={t("category.deleteMsg")}
-        confirmLabel={t("common.delete")}
+        open={!!target}
+        title={t("catX.delTitle")}
+        message={t("catX.delMsg", { name: target?.name ?? "" })}
         onCancel={() => setDel(null)}
         onConfirm={() => {
-          setRows(rows.filter((_, i) => i !== del));
+          if (del !== null) deleteCategory(del);
           setDel(null);
         }}
       />

@@ -1,6 +1,6 @@
 import { createInstance, type i18n as I18n } from "i18next";
 import { initReactI18next } from "react-i18next";
-import { en, he } from "./locales";
+import { enAll as en, heAll as he } from "./resources";
 
 export const LANGS = ["en", "he"] as const;
 export type Lang = (typeof LANGS)[number];

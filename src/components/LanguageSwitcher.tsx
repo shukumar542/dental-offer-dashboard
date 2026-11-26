@@ -13,14 +13,14 @@ export default function LanguageSwitcher() {
       aria-label={t("lang.label")}
       className="flex items-center gap-1 rounded-[10px] bg-panel p-1 text-[13px]"
     >
-      <Languages size={15} className="mx-1 text-muted" />
+      <Languages size={15} className="mx-1 hidden text-muted min-[400px]:block" />
       {LANGS.map((l) => (
         <button
           key={l}
           type="button"
           onClick={() => i18n.changeLanguage(l)}
           aria-pressed={current === l}
-          className={`rounded-lg px-3 py-1.5 font-medium transition ${
+          className={`rounded-lg px-2.5 py-1.5 font-medium min-[400px]:px-3 transition ${
             current === l ? "bg-navy text-white" : "text-ink hover:bg-white"
           }`}
         >

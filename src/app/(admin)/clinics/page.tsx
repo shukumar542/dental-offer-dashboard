@@ -3,55 +3,91 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Ban, Circle, Pencil, Plus, SlidersHorizontal } from "lucide-react";
+import { Ban, Circle, Eye, Plus, SlidersHorizontal } from "lucide-react";
+import { useAdminData } from "@/components/AdminData";
 import {
   Avatar,
   ConfirmModal,
-  FilterSelect,
   IconBtn,
+  Modal,
   PageTitle,
   SearchBox,
   StatusBadge,
   TableCard,
   usePaged,
 } from "@/components/ui";
-import { clinics as seed } from "@/lib/data";
+
+type Filters = { account: string; source: string; verification: string };
+const NONE: Filters = { account: "all", source: "all", verification: "all" };
+
+function Chips({
+  value,
+  onChange,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <div className="flex flex-wrap gap-2 rounded-[12px] bg-panel p-1.5">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          onClick={() => onChange(o.value)}
+          className={`rounded-[8px] px-3 py-2 text-[12px] font-medium transition ${
+            value === o.value ? "bg-navy text-white" : "text-muted hover:bg-white"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function ClinicsPage() {
   const { t } = useTranslation();
-  const [rows, setRows] = useState(seed);
+  const { clinics, toggleClinic } = useAdminData();
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState("");
+  const [filters, setFilters] = useState<Filters>(NONE);
+  const [draft, setDraft] = useState<Filters>(NONE);
   const [showFilter, setShowFilter] = useState(false);
   const [target, setTarget] = useState<number | null>(null);
 
-  const filtered = rows.filter(
-    (r) => r.name.toLowerCase().includes(q.toLowerCase()) && (!status || r.status === status),
+  const filtered = clinics.filter(
+    (c) =>
+      c.name.toLowerCase().includes(q.toLowerCase()) &&
+      (filters.account === "all" || c.status === filters.account) &&
+      (filters.source === "all" || c.source === filters.source) &&
+      (filters.verification === "all" || c.verification === filters.verification),
   );
   const { slice, page, pages, setPage } = usePaged(filtered);
-  const tg = rows.find((r) => r.id === target);
+  const tg = clinics.find((r) => r.id === target);
   const blocking = tg?.status === "Active";
+  const active = JSON.stringify(filters) !== JSON.stringify(NONE);
 
   return (
     <div>
       <PageTitle title={t("clinics.title")}>
         <SearchBox value={q} onChange={(v) => (setQ(v), setPage(1))} />
         <button
-          onClick={() => setShowFilter(!showFilter)}
+          onClick={() => {
+            setDraft(filters);
+            setShowFilter(true);
+          }}
           aria-label={t("clinics.filters")}
-          className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-navy text-white"
+          className="relative flex h-11 w-11 items-center justify-center rounded-[10px] bg-navy text-white"
         >
           <SlidersHorizontal size={18} />
+          {active && <span className="absolute -end-1 -top-1 h-3 w-3 rounded-full bg-gold" />}
         </button>
         <Link href="/clinics/new" className="flex h-11 items-center gap-2 rounded-[10px] bg-navy px-5 text-[15px] font-medium text-white">
           <Plus size={16} /> {t("clinics.add")}
         </Link>
       </PageTitle>
-      {showFilter && (
-        <div className="mb-4 flex justify-end">
-          <FilterSelect value={status} onChange={(v) => (setStatus(v), setPage(1))} options={["Active", "Blocked"]} />
-        </div>
-      )}
+
       <TableCard
         empty={filtered.length === 0}
         paging={{ page, pages, onPage: setPage }}
@@ -86,11 +122,12 @@ export default function ClinicsPage() {
             <td className="td">
               <div className="flex justify-end gap-2">
                 <Link
-                  href={`/clinics/${c.id}/edit`}
-                  aria-label={t("clinics.edit")}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy text-white"
+                  href={`/clinics/${c.id}`}
+                  aria-label={t("clinicX.details")}
+                  title={t("clinicX.details")}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-navy text-white hover:opacity-80"
                 >
-                  <Pencil size={15} />
+                  <Eye size={15} />
                 </Link>
                 <IconBtn
                   label={c.status === "Active" ? t("clinics.block") : t("clinics.unblock")}
@@ -104,16 +141,83 @@ export default function ClinicsPage() {
           </tr>
         ))}
       </TableCard>
+
       <ConfirmModal
         open={!!tg}
         title={blocking ? t("clinics.blockTitle") : t("clinics.unblockTitle")}
         message={blocking ? t("clinics.blockMsg") : t("clinics.unblockMsg")}
         onCancel={() => setTarget(null)}
         onConfirm={() => {
-          setRows(rows.map((r) => (r.id === target ? { ...r, status: r.status === "Active" ? "Blocked" : "Active" } : r)));
+          if (target !== null) toggleClinic(target);
           setTarget(null);
         }}
       />
+
+      <Modal open={showFilter} title={t("clinicX.filterTitle")} onClose={() => setShowFilter(false)}>
+        <p className="-mt-3 mb-5 text-[13px] text-muted">{t("clinicX.filterSub")}</p>
+        <div className="space-y-4">
+          <div>
+            <p className="mb-2 text-[15px] font-medium">{t("clinicX.acctStatus")}</p>
+            <Chips
+              value={draft.account}
+              onChange={(account) => setDraft({ ...draft, account })}
+              options={[
+                { value: "all", label: t("clinicX.allClinics") },
+                { value: "Active", label: t("clinicX.activeClinics") },
+                { value: "Blocked", label: t("clinicX.blockedClinics") },
+              ]}
+            />
+          </div>
+          <div>
+            <p className="mb-2 text-[15px] font-medium">{t("clinicX.regSource")}</p>
+            <Chips
+              value={draft.source}
+              onChange={(source) => setDraft({ ...draft, source })}
+              options={[
+                { value: "all", label: t("clinicX.allClinics") },
+                { value: "Admin Added", label: t("clinicX.adminAdded") },
+                { value: "Self-Registered", label: t("clinicX.selfRegistered") },
+              ]}
+            />
+          </div>
+          <div>
+            <p className="mb-2 text-[15px] font-medium">{t("clinicX.verStatus")}</p>
+            <Chips
+              value={draft.verification}
+              onChange={(verification) => setDraft({ ...draft, verification })}
+              options={[
+                { value: "all", label: t("clinicX.allClinics") },
+                { value: "Pending", label: t("clinicX.pendingClinics") },
+                { value: "Verified", label: t("clinicX.verifiedClinics") },
+                { value: "Rejected", label: t("clinicX.rejectedClinics") },
+              ]}
+            />
+          </div>
+        </div>
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          <button
+            onClick={() => {
+              setDraft(NONE);
+              setFilters(NONE);
+              setPage(1);
+              setShowFilter(false);
+            }}
+            className="h-12 rounded-[10px] bg-panel font-medium text-muted"
+          >
+            {t("common.cancel")}
+          </button>
+          <button
+            onClick={() => {
+              setFilters(draft);
+              setPage(1);
+              setShowFilter(false);
+            }}
+            className="h-12 rounded-[10px] bg-navy font-medium text-white"
+          >
+            {t("clinicX.apply")}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

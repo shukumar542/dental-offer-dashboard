@@ -15,7 +15,7 @@ import {
   Underline,
   Undo2,
 } from "lucide-react";
-import { PageTitle } from "./ui";
+import { ConfirmModal, PageTitle } from "./ui";
 
 const tools: { icon: typeof Bold; cmd: string; arg?: string; label: string }[] = [
   { icon: Undo2, cmd: "undo", label: "undo" },
@@ -35,6 +35,7 @@ export default function RichEditorPage({ doc }: { doc: "terms" | "privacy" }) {
   const { t, i18n } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const [saved, setSaved] = useState(false);
+  const [confirm, setConfirm] = useState(false);
 
   // Load the policy text in the active language (re-runs when the language switches).
   useEffect(() => {
@@ -98,11 +99,21 @@ export default function RichEditorPage({ doc }: { doc: "terms" | "privacy" }) {
         />
       </div>
       <div className="mt-4 flex items-center gap-4">
-        <button className="btn" onClick={() => setSaved(true)}>
+        <button className="btn" onClick={() => setConfirm(true)}>
           {t("common.saveChanges")}
         </button>
         {saved && <span className="text-[14px] text-ok">{t("common.changesSaved")}</span>}
       </div>
+      <ConfirmModal
+        open={confirm}
+        title={t(`acctX.${doc}Title`)}
+        message={t(`acctX.${doc}Msg`)}
+        onCancel={() => setConfirm(false)}
+        onConfirm={() => {
+          setConfirm(false);
+          setSaved(true);
+        }}
+      />
     </div>
   );
 }
